@@ -4,11 +4,8 @@ const xhr = new XMLHttpRequest();
 
 xhr.onreadystatechange = function () {
   if (this.readyState === 4 && this.status === 200) {
-    console.log(this.response);
     const res = JSON.parse(this.response);
-    console.log(res);
     if (res) {
-      console.log("hdsfad");
       jokeText.innerHTML = res.value;
     }
   }

@@ -1,81 +1,106 @@
-const apiUrl = 'https://jsonplaceholder.typicode.com/todos';
+const api = 'https://jsonplaceholder.typicode.com/todos'
+const form = document.getElementById('todo-form')
+const input = document.getElementById('title')
+const toDoList = document.querySelector('#todo-list')
+// fetch(api).then(res => console.log(res.json()))
+console.log('helo')
 
-const getTodos = () => {
-  fetch(apiUrl + '?_limit=10')
-    .then((res) => res.json())
-    .then((data) => {
-      data.forEach((todo) => addTodoToDOM(todo));
-    });
-};
+const getToDos = () => {
+    fetch(api + "?_limit=5")
+    .then((res) =>res.json())
+    .then((data) => data.forEach((item) => {
+        console.log(item)
+        addItemToDom(item)
+    }))
+}
 
-const addTodoToDOM = (todo) => {
-  const div = document.createElement('div');
-  div.classList.add('todo');
-  div.appendChild(document.createTextNode(todo.title));
-  div.setAttribute('data-id', todo.id);
+function addItemToDom(toDo){
+    const div = document.createElement('div');
+    div.classList = "to-do"
+    div.appendChild(document.createTextNode(toDo.title));
+    div.setAttribute('data-id', toDo.id);
+    if(toDo.completed){
+        div.classList.add('done')
+    }
+    document.getElementById('todo-list').appendChild(div)
+}
 
-  if (todo.completed) {
-    div.classList.add('done');
-  }
+function addToDo(todo){
+    addItemToDom(todo)
+}
 
-  document.getElementById('todo-list').appendChild(div);
-};
-
-const createTodo = (e) => {
-  e.preventDefault();
-
-  const newTodo = {
-    title: e.target.firstElementChild.value,
-    completed: false,
-  };
-
-  fetch(apiUrl, {
-    method: 'POST',
-    body: JSON.stringify(newTodo),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => addTodoToDOM(data));
-};
-
-const toggleCompleted = (e) => {
-  if (e.target.classList.contains('todo')) {
-    e.target.classList.toggle('done');
-
-    updateTodo(e.target.dataset.id, e.target.classList.contains('done'));
-  }
-};
-
-const updateTodo = (id, completed) => {
-  fetch(`${apiUrl}/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ completed }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-};
-
-const deleteTodo = (e) => {
-  if (e.target.classList.contains('todo')) {
-    const id = e.target.dataset.id;
-    fetch(`${apiUrl}/${id}`, {
-      method: 'DELETE',
+function createTodo(e){
+    e.preventDefault();
+    const todo = {
+        title: e.target.firstElementChild.value,
+        completed: true
+    }
+    fetch(api, {
+        method: 'POST',
+        body: JSON.stringify(todo),
+        headers: {
+            'Content-Type': 'application/json'
+        }
     })
-      .then((res) => res.json())
-      .then(() => e.target.remove());
-  }
-};
+    .then((res) => res.json())
+    .then(data => addItemToDom(data))
+    input.value = ''
+}
 
-const init = () => {
-  document.addEventListener('DOMContentLoaded', getTodos);
-  document.querySelector('#todo-form').addEventListener('submit', createTodo);
-  document
-    .querySelector('#todo-list')
-    .addEventListener('click', toggleCompleted);
-  document.querySelector('#todo-list').addEventListener('dblclick', deleteTodo);
-};
+function toDoListClick(e){
+    console.log(e.target.dataset.id)
+    if(e.target.classList.contains('to-do')){
+        // Toggle = amazing little function!!!!!
+        const isCompleted =  e.target.classList.contains('done')
+        e.target.classList.toggle('done')
+        const id = e.target.dataset.id;
+        updateToDo(id, !isCompleted)
+    }
+}
 
-init();
+function updateToDo(id, completed){
+    console.log('single ')
+
+    // Run Put request to mark toDo as completed, will need the ID. 
+    // Look at documentation on how to do this
+
+    // Strange that we do not need 'posts' in the url as that is what is on the documentation
+    fetch(api + `/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({completed}),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+}
+
+function deleteToDo(e){
+    fetch(api + `/posts${e.target.dataset.id}`, {
+        method: "DELETE",
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then((res) => console.log(res.status))
+
+}
+
+function toDoListDoubleClick(e){
+    console.log('double ')
+    e.preventDefault();
+    if(e.target.classList.contains('to-do')){
+        deleteToDo(e)
+    }
+}
+
+
+function init(){
+    getToDos()
+    document.addEventListener('DOMContentLoaded', init);
+    form.addEventListener('submit', createTodo);
+    toDoList.addEventListener('click', updateToDo)
+    // Not working
+    // toDoList.addEventListener('dblclick', toDoListDoubleClick)
+}
+
+init()
